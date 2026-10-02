@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="海大餐廳候位管理系統，以佇列實作登記、叫號、查詢與候位看板。"
+    />
+    <title>海味候位｜海大餐廳排隊系統</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">跳至主要內容</a>
+
+    <header class="site-header">
+      <div class="brand-lockup">
+        <div class="brand-mark" aria-hidden="true"><span>海</span></div>
+        <div>
+          <p class="eyebrow">NTOU DINING SERVICE</p>
+          <h1>海味候位</h1>
+        </div>
+      </div>
+      <div class="header-status">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span>營業中</span>
+        <span class="header-divider" aria-hidden="true"></span>
+        <time id="current-time" aria-label="目前時間">--:--</time>
+      </div>
+    </header>
+
+    <main id="main-content" class="page-shell">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="section-kicker">KEELUNG · TAIWAN</p>
+          <h2 id="hero-title">讓每一次等候，<br /><em>都有方向。</em></h2>
+          <p class="hero-description">
+            海大餐廳智慧候位系統。先登記、依序叫號，公平又清楚。
+          </p>
+        </div>
+
+        <div class="now-card" aria-live="polite">
+          <div class="now-card-topline">
+            <span>NOW SERVING</span>
+            <span class="live-pill"><i></i> 即時</span>
+          </div>
+          <div class="now-number" id="now-serving-number">—</div>
+          <div class="now-meta">
+            <div>
+              <span>目前叫號</span>
+              <strong id="now-serving-name">尚未開始叫號</strong>
+            </div>
+            <div class="now-party" id="now-serving-party">— 人</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="stats-grid" aria-label="候位即時資訊">
+        <article class="stat-card">
+          <span class="stat-icon" aria-hidden="true">◎</span>
+          <div>
+            <p>候位組數</p>
+            <strong><span id="waiting-count">0</span><small> 組</small></strong>
+          </div>
+        </article>
+        <article class="stat-card">
+          <span class="stat-icon" aria-hidden="true">♙</span>
+          <div>
+            <p>候位人數</p>
+            <strong><span id="people-count">0</span><small> 人</small></strong>
+          </div>
+        </article>
+        <article class="stat-card stat-card-accent">
+          <span class="stat-icon" aria-hidden="true">◷</span>
+          <div>
+            <p>預估等候</p>
+            <strong><span id="estimated-wait">0</span><small> 分鐘</small></strong>
+          </div>
+        </article>
+        <article class="stat-card">
+          <span class="stat-icon" aria-hidden="true">#</span>
+          <div>
+            <p>下一張號碼牌</p>
+            <strong id="next-ticket">A001</strong>
+          </div>
+        </article>
+      </section>
+
+      <div class="workspace-grid">
+        <section class="panel registration-panel" aria-labelledby="register-title">
+          <div class="panel-heading">
+            <div>
+              <p class="panel-index">01 / JOIN</p>
+              <h3 id="register-title">登記候位</h3>
+            </div>
+            <span class="fifo-note">從隊伍尾端加入</span>
+          </div>
+
+          <form id="join-form" novalidate>
+            <div class="field-row">
+              <label class="field">
+                <span>姓名 <b aria-hidden="true">*</b></span>
+                <input id="customer-name" name="name" type="text" maxlength="20" placeholder="例如：王小明" autocomplete="name" required />
+              </label>
+              <label class="field">
+                <span>手機號碼 <b aria-hidden="true">*</b></span>
+                <input id="customer-phone" name="phone" type="tel" inputmode="tel" maxlength="15" placeholder="0912-345-678" autocomplete="tel" required />
+              </label>
+            </div>
+
+            <div class="field-row">
+              <label class="field">
+                <span>用餐人數</span>
+                <select id="party-size" name="partySize">
+                  <option value="1">1 人</option>
+                  <option value="2" selected>2 人</option>
+                  <option value="3">3 人</option>
+                  <option value="4">4 人</option>
+                  <option value="5">5 人</option>
+                  <option value="6">6 人以上</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>用餐區域</span>
+                <select id="dining-area" name="area">
+                  <option value="不限" selected>不限區域</option>
+                  <option value="靠窗區">靠窗區</option>
+                  <option value="一般座位">一般座位</option>
+                  <option value="多人座位">多人座位</option>
+                </select>
+              </label>
+            </div>
+
+            <p class="form-error" id="form-error" role="alert"></p>
+            <button class="primary-button" type="submit">
+              <span>取得候位號碼</span>
+              <span aria-hidden="true">→</span>
+            </button>
+          </form>
+
+          <div class="ticket-preview" aria-hidden="true">
+            <div>
+              <span>YOUR TICKET</span>
+              <strong id="preview-ticket">A001</strong>
+            </div>
+            <div class="ticket-waves">≈</div>
+          </div>
+        </section>
+
+        <section class="panel console-panel" aria-labelledby="console-title">
+          <div class="panel-heading">
+            <div>
+              <p class="panel-index">02 / COUNTER</p>
+              <h3 id="console-title">櫃台操作</h3>
+            </div>
+            <span class="fifo-note">從隊伍前端叫號</span>
+          </div>
+
+          <button id="call-next-button" class="call-button" type="button">
+            <span class="call-button-icon" aria-hidden="true">⌁</span>
+            <span>
+              <small>FRONT + POP</small>
+              <strong>叫下一位入座</strong>
+            </span>
+            <span aria-hidden="true">→</span>
+          </button>
+
+          <div class="action-grid">
+            <button id="peek-button" class="secondary-button" type="button">
+              <span aria-hidden="true">◉</span>
+              <span><small>FRONT</small> 查看下一位</span>
+            </button>
+            <button id="demo-button" class="secondary-button" type="button">
+              <span aria-hidden="true">＋</span>
+              <span>加入範例客人</span>
+            </button>
+          </div>
+
+          <form id="lookup-form" class="lookup-form">
+            <label for="lookup-number">查詢候位進度</label>
+            <div>
+              <input id="lookup-number" type="text" maxlength="6" placeholder="輸入號碼，例如 A003" autocomplete="off" />
+              <button type="submit">查詢</button>
+            </div>
+          </form>
+          <p id="lookup-result" class="lookup-result" aria-live="polite">輸入號碼，就能知道前面還有幾組。</p>
+        </section>
+      </div>
+
+      <section class="panel queue-panel" aria-labelledby="queue-title">
+        <div class="panel-heading queue-heading">
+          <div>
+            <p class="panel-index">03 / QUEUE&lt;CUSTOMER&gt;</p>
+            <h3 id="queue-title">候位名單</h3>
+          </div>
+          <div class="queue-heading-actions">
+            <span id="queue-range">FRONT — BACK</span>
+            <button id="clear-button" class="text-button danger" type="button">清空候位</button>
+          </div>
+        </div>
+
+        <div class="queue-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">順序</th>
+                <th scope="col">號碼</th>
+                <th scope="col">候位人</th>
+                <th scope="col">人數</th>
+                <th scope="col">區域</th>
+                <th scope="col">已等候</th>
+                <th scope="col"><span class="visually-hidden">狀態</span></th>
+              </tr>
+            </thead>
+            <tbody id="queue-body"></tbody>
+          </table>
+
+          <div id="empty-state" class="empty-state">
+            <span class="empty-illustration" aria-hidden="true">≋</span>
+            <strong>目前沒有人候位</strong>
+            <p>從上方登記第一組客人，隊伍就會出現在這裡。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="bottom-grid">
+        <article class="panel operation-panel">
+          <div class="panel-heading compact-heading">
+            <div>
+              <p class="panel-index">04 / OUTPUT</p>
+              <h3>操作紀錄</h3>
+            </div>
+            <button id="clear-log-button" class="text-button" type="button">清除紀錄</button>
+          </div>
+          <ol id="operation-log" class="operation-log" aria-live="polite"></ol>
+        </article>
+
+        <aside class="learning-card" aria-labelledby="learn-title">
+          <p class="section-kicker">DATA STRUCTURE</p>
+          <h3 id="learn-title">這就是 Queue</h3>
+          <p>先登記的客人會先被叫到，這個規則叫做 <strong>FIFO</strong>（先進先出）。</p>
+          <div class="code-map">
+            <span><code>push()</code> 登記候位</span>
+            <span><code>front()</code> 查看下一位</span>
+            <span><code>pop()</code> 叫號入座</span>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <footer>
+      <span>海味候位 · NTOU Dining Queue</span>
+      <span>佇列資料結構實作練習</span>
+    </footer>
+
+    <div id="toast-region" class="toast-region" aria-live="assertive" aria-atomic="true"></div>
+
+    <dialog id="confirm-dialog" class="confirm-dialog">
+      <form method="dialog">
+        <span class="dialog-icon" aria-hidden="true">!</span>
+        <h3>確定清空候位名單？</h3>
+        <p>所有尚未入座的客人都會從隊伍移除，此操作無法復原。</p>
+        <div>
+          <button value="cancel" class="secondary-button">取消</button>
+          <button value="confirm" class="danger-button">確定清空</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="app.js" defer></script>
+  </body>
+</html>
